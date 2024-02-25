@@ -1,4 +1,5 @@
-const http = require('http')
+const express = require('express')
+const app = express()
 
 let numbers = [
     {
@@ -17,9 +18,13 @@ let numbers = [
         number: "0491281199",
     }
 ]
-const app = http.createServer((request, response) => {
-    response.writeHead(200, { 'Content-Type': 'application/json' })
-    response.end(JSON.stringify(numbers))
+
+app.get("/", (request, response) => {
+    response.send("<h1>Puhelinluettelo</h1>")
+})
+
+app.get("/api/persons", (request, response) => {
+    response.json(numbers)
 })
 
 const PORT = 3001
