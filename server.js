@@ -24,6 +24,8 @@ let numbers = [
     }
 ]
 
+app.use(express.json())
+
 app.get("/", (request, response) => {
     response.send("<h1>Puhelinluettelo</h1>")
 })
@@ -38,6 +40,17 @@ app.get("/info", (request, response) => {
 
 app.get("/api/persons", (request, response) => {
     response.json(numbers)
+})
+
+app.get("/api/persons/:id", (request, response) => {
+    const id = Number(request.params.id)
+    const person = numbers.find(person => person.id === id)
+    if (person) {
+        response.json(person)
+    } else {
+        console.log(`No user found with the provided ID: ${id}`)
+        response.status(404).end()
+    }
 })
 
 const PORT = 3001
