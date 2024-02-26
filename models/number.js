@@ -6,8 +6,8 @@ const url = process.env.MONGODB_URI;
 
 console.log("connection to url", url);
 mongoose
-  .connect(url)
-  .then((result) => {
+  .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
     console.log("connected to MongoDB");
   })
   .catch((error) => {
@@ -21,9 +21,6 @@ const numberSchema = new mongoose.Schema({
     required: true,
   },
   number: {
-   type: String,
-   minLength: 8,
-   number: {
     type: String,
     minLength: 8,
     validate: {
@@ -36,11 +33,11 @@ const numberSchema = new mongoose.Schema({
         if (!/^\d{2,3}$/.test(parts[0])) {
           return false;
         }
-  
+
         if (!/^\d+$/.test(parts[1])) {
           return false;
         }
-  
+
         return true;
       },
       message: props => `${props.value} ei ole kelvollinen puhelinnumero!`
