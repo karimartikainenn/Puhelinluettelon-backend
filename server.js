@@ -93,16 +93,18 @@ app.post('/api/persons', async (request, response) => {
   }
 });
 
-app.delete('/api/persons/:id', (request, response) => {
-  try {
-    const id = Person(request.params.id);
-    persons = persons.filter(person => person.id !== id)
-    response.status(204).end();
-  } catch (error) {
-    console.error('Error deleting person:', error.message);
-    response.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+app.delete('/api/persons/:id', async (request, response) => {
+    try {
+      const deletedPerson = await Person.findByIdAndDelete(request.params.id);
+      if (!deletedPerson) {
+        return response.status(404).json({ error: 'Person not found' });
+      }
+      response.status(204).end();
+    } catch (error) {
+      console.error('Error deleting person:', error.message);
+      response.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
