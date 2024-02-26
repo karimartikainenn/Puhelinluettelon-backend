@@ -12,7 +12,6 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 
-// Morgan token for logging POST data
 morgan.token('postData', (request) => {
   if (request.method === 'POST') {
     return JSON.stringify(request.body);
@@ -29,7 +28,6 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
     console.error('Error connecting to MongoDB:', error.message);
   });
 
-// Routes
 app.get('/', (request, response) => {
   response.send('<h1>Puhelinluettelo</h1>');
 });
@@ -95,9 +93,10 @@ app.post('/api/persons', async (request, response) => {
   }
 });
 
-app.delete('/api/persons/:id', async (request, response) => {
+app.delete('/api/persons/:id', (request, response) => {
   try {
-    await Person.findByIdAndRemove(request.params.id);
+    const id = Person(request.params.id);
+    persons = persons.filter(person => person.id !== id)
     response.status(204).end();
   } catch (error) {
     console.error('Error deleting person:', error.message);
