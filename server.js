@@ -58,7 +58,7 @@ app.get('/api/persons/:id', async (request, response) => {
   }
 });
 
-app.post('/api/persons', async (request, response) => {
+app.post('/api/persons', async (request, response, next) => {
   const body = request.body;
 
   if (!body.name || !body.number) {
@@ -79,8 +79,7 @@ app.post('/api/persons', async (request, response) => {
     const savedPerson = await person.save();
     response.json(savedPerson);
   } catch (error) {
-    console.error('Error saving person:', error.message);
-    response.status(500).json({ error: 'Internal Server Error' });
+    next(error);
   }
 });
 
@@ -109,6 +108,11 @@ app.delete('/api/persons/:id', async (request, response) => {
       console.error('Error deleting person:', error.message);
       response.status(500).json({ error: 'Internal Server Error' });
     }
+  });
+
+  app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Internal Server Error' });
   });
 
 const PORT = process.env.PORT || 3001;
