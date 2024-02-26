@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build:ui": "rm -rf dist && cd ../Users/karimartikainen/Library/Developer/Repository/Full-stack-open/osa2/puhelinluettelo && npm run build && cp -r dist '/Users/karimartikainen/Library/Developer/Puhelinluettelon backend'",
+    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push",
     "devStart": "nodemon server.js"
   },
   "keywords": [],
@@ -18,3 +20,4 @@
     "nodemon": "^3.1.0"
   }
 }
+
