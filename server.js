@@ -32,7 +32,12 @@ let numbers = [
         id: 4,
         name: "Jaakko Jokinen",
         number: "0419249277",
-    }
+    },
+    {
+        id: 5,
+        name: "Jesse Janhunen",
+        number: "0491259511"
+    },
 ]
 
 app.use(express.static('dist'))
