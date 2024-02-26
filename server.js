@@ -93,20 +93,19 @@ app.post('/api/persons', async (request, response) => {
   }
 });
 
-app.put('/api/persons/:id', async (request, response) => {
-  const body = request.body;
+app.put('/api/persons/:id', (request, response, next) => {
+  const { name, number } = request.body
 
-  try {
-    const updatedPerson = await Person.findByIdAndUpdate(request.params.id, body, { new: true });
-    if (!updatedPerson) {
-      return response.status(404).json({ error: 'Person not found' });
-    }
-    response.json(updatedPerson);
-  } catch (error) {
-    console.error('Error updating person:', error.message);
-    response.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+  Person.findByIdAndUpdate(
+    request.params.id, 
+    { name, number },
+    { new: true, runValidators: true, context: 'query' }
+  ) 
+    .then(updatedPerson => {
+      response.json(updatedPerson)
+    })
+    .catch(error => next(error))
+})
 
 app.delete('/api/persons/:id', async (request, response) => {
     try {
@@ -120,6 +119,8 @@ app.delete('/api/persons/:id', async (request, response) => {
       response.status(500).json({ error: 'Internal Server Error' });
     }
   });
+
+  app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

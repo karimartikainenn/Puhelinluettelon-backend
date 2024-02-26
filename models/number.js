@@ -14,7 +14,11 @@ mongoose.connect(url)
     })
 
 const numberSchema = new mongoose.Schema({
-    name: String,
+    name:{
+        String,
+        minlength: 3,
+        required: true,
+    },
     number: String,
 })
 
