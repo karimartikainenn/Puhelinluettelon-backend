@@ -80,17 +80,6 @@ const generateId = () => {
         })
     }
 
-    const person = {
-        id: generateId(),
-        name: body.name,
-        number: body.number,
-    }
-
-    persons = persons.concat(person)
-
-    response.json(person)
-})
-
 app.delete("/api/persons/:id", (request, response) => {
     const id = Person(request.params.id)
     persons = persons.filter(person => person.id !== id)
