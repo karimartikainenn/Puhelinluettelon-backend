@@ -93,6 +93,21 @@ app.post('/api/persons', async (request, response) => {
   }
 });
 
+app.put('/api/persons/:id', async (request, response) => {
+  const body = request.body;
+
+  try {
+    const updatedPerson = await Person.findByIdAndUpdate(request.params.id, body, { new: true });
+    if (!updatedPerson) {
+      return response.status(404).json({ error: 'Person not found' });
+    }
+    response.json(updatedPerson);
+  } catch (error) {
+    console.error('Error updating person:', error.message);
+    response.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.delete('/api/persons/:id', async (request, response) => {
     try {
       const deletedPerson = await Person.findByIdAndDelete(request.params.id);
