@@ -2,6 +2,14 @@ const express = require('express')
 const app = express()
 var morgan = require('morgan')
 
+morgan.token("postData", (request) => {
+    if (request.method === "POST") {
+        return JSON.stringify(request.body)
+    } else {
+        return ""; 
+    }
+})
+
 
 let numbers = [
     {
@@ -27,7 +35,7 @@ let numbers = [
 ]
 
 app.use(express.json())
-app.use(morgan("tiny"))
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :postData'));
 
 app.get("/", (request, response) => {
     response.send("<h1>Puhelinluettelo</h1>")
