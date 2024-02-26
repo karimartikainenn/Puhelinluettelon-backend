@@ -1,7 +1,10 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const cors = require("cors")
 const morgan = require('morgan')
+const mongoose = require("mongoose");
+const Person = require('./models/number');
 
 morgan.token("postData", (request) => {
     if (request.method === "POST") {
@@ -12,33 +15,7 @@ morgan.token("postData", (request) => {
 })
 
 
-let numbers = [
-    {
-        id: 1,
-        name: "Kari Martikainen",
-        number: "0452350455",
-    },
-    {
-        id: 2,
-        name: "Made Im-ari",
-        number: "0491294900",
-    },
-    {
-        id: 3,
-        name: "Juha Martikainen",
-        number: "0491281199",
-    },
-    {
-        id: 4,
-        name: "Jaakko Jokinen",
-        number: "0419249277",
-    },
-    {
-        id: 5,
-        name: "Jesse Janhunen",
-        number: "0491259511"
-    },
-]
+let persons = []
 
 app.use(express.static('dist'))
 app.use(express.json())
@@ -49,21 +26,26 @@ app.get("/", (request, response) => {
     response.send("<h1>Puhelinluettelo</h1>")
 })
 
-app.get("/info", (request, response) => {
-    const summa = numbers.length > 0
-    ? Math.max(...numbers.map(n => n.id))
-    : 0
-    const requestDateTime = new Date().toLocaleString('fi-FI', { timeZone: 'Europe/Helsinki' });
-    response.send(`Phonebook has info for ${summa} people\n Request made at: ${requestDateTime}`)
-})
+app.get("/info", async (req, res) => {
+    try {
+        const count = await Person.countDocuments({});
+        const requestDateTime = new Date().toLocaleString('fi-FI', { timeZone: 'Europe/Helsinki' });
+        res.send(`Phonebook has info for ${count} people\n Request made at: ${requestDateTime}`);
+    } catch (error) {
+        console.error("Error retrieving info:", error.message);
+        res.status(500).send("Internal Server Error");
+    }
+});
 
 app.get("/api/persons", (request, response) => {
-    response.json(numbers)
+    Person.find({}).then(persons => {
+        response.json(persons)
+    })
 })
 
 app.get("/api/persons/:id", (request, response) => {
-    const id = Number(request.params.id)
-    const person = numbers.find(person => person.id === id)
+    const id = Person(request.params.id)
+    const person = persons.find(person => person.id === id)
     if (person) {
         response.json(person)
     } else {
@@ -73,8 +55,8 @@ app.get("/api/persons/:id", (request, response) => {
 })
 
 const generateId = () => {
-    const maxId = numbers.length > 0
-      ? Math.max(...numbers.map(n => n.id))
+    const maxId = persons.length > 0
+      ? Math.max(...persons.map(n => n.id))
       : 0
     return maxId + 1
   }
@@ -88,7 +70,7 @@ app.post("/api/persons", (request, response) => {
         })
     }
 
-    const existingPerson = numbers.find(person => person.name === body.name);
+    const existingPerson = persons.find(person => person.name === body.name);
     if (existingPerson) {
         return response.status(400).json({
             error: "name must be unique"
@@ -101,18 +83,18 @@ app.post("/api/persons", (request, response) => {
         number: body.number,
     }
 
-    numbers = numbers.concat(person)
+    persons = persons.concat(person)
 
     response.json(person)
 })
 
 app.delete("/api/persons/:id", (request, response) => {
-    const id = Number(request.params.id)
-    numbers = numbers.filter(person => person.id !== id)
+    const id = Person(request.params.id)
+    persons = persons.filter(person => person.id !== id)
 
     response.status(204).end()
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT)
 console.log(`Server running on port ${PORT}`)

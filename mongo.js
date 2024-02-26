@@ -16,10 +16,10 @@ const numberSchema = new mongoose.Schema({
     number: String,
 });
 
-const Number = mongoose.model("Number", numberSchema);
+const Person = mongoose.model("Person", numberSchema);
 
 if (process.argv.length === 3) {
-    Number.find({}).then(result => {
+    Person.find({}).then(result => {
         console.log("phonebook:");
         result.forEach(person => {
             console.log(`${person.name} ${person.number}`);
@@ -31,7 +31,7 @@ if (process.argv.length === 3) {
     const name = process.argv[3];
     const number = process.argv[4];
 
-    const entry = new Number({
+    const entry = new Person({
         name: name,
         number: number,
     });
