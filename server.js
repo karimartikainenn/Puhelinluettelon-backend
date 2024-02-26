@@ -1,92 +1,111 @@
-require('dotenv').config()
-const express = require('express')
-const app = express()
-const cors = require("cors")
-const morgan = require('morgan')
-const mongoose = require("mongoose");
+require('dotenv').config();
+const express = require('express');
+const app = express();
+const cors = require('cors');
+const morgan = require('morgan');
+const mongoose = require('mongoose');
 const Person = require('./models/number');
 
-morgan.token("postData", (request) => {
-    if (request.method === "POST") {
-        return JSON.stringify(request.body)
-    } else {
-        return ""; 
-    }
-})
+// Middleware
+app.use(express.static('dist'));
+app.use(express.json());
+app.use(cors());
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 
-
-let persons = []
-
-app.use(express.static('dist'))
-app.use(express.json())
-app.use(cors())
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :postData'));
-
-app.get("/", (request, response) => {
-    response.send("<h1>Puhelinluettelo</h1>")
-})
-
-app.get("/info", async (req, res) => {
-    try {
-        const count = await Person.countDocuments({});
-        const requestDateTime = new Date().toLocaleString('fi-FI', { timeZone: 'Europe/Helsinki' });
-        res.send(`Phonebook has info for ${count} people\n Request made at: ${requestDateTime}`);
-    } catch (error) {
-        console.error("Error retrieving info:", error.message);
-        res.status(500).send("Internal Server Error");
-    }
+// Morgan token for logging POST data
+morgan.token('postData', (request) => {
+  if (request.method === 'POST') {
+    return JSON.stringify(request.body);
+  }
+  return '';
 });
 
-app.get("/api/persons", (request, response) => {
-    Person.find({}).then(persons => {
-        response.json(persons)
-    })
-})
-
-app.get('/api/persons/:id', (request, response) => {
-    Person.findById(request.params.id).then(person => {
-      response.json(person)
-    })
+// Database connection
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log('Connected to MongoDB');
   })
+  .catch((error) => {
+    console.error('Error connecting to MongoDB:', error.message);
+  });
 
-const generateId = () => {
-    const maxId = persons.length > 0
-      ? Math.max(...persons.map(n => n.id))
-      : 0
-    return maxId + 1
+// Routes
+app.get('/', (request, response) => {
+  response.send('<h1>Puhelinluettelo</h1>');
+});
+
+app.get('/info', async (req, res) => {
+  try {
+    const count = await Person.countDocuments({});
+    const requestDateTime = new Date().toLocaleString('fi-FI', { timeZone: 'Europe/Helsinki' });
+    res.send(`Phonebook has info for ${count} people\n Request made at: ${requestDateTime}`);
+  } catch (error) {
+    console.error('Error retrieving info:', error.message);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.get('/api/persons', async (request, response) => {
+  try {
+    const persons = await Person.find({});
+    response.json(persons);
+  } catch (error) {
+    console.error('Error fetching persons:', error.message);
+    response.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/api/persons/:id', async (request, response) => {
+  try {
+    const person = await Person.findById(request.params.id);
+    if (person) {
+      response.json(person);
+    } else {
+      response.status(404).end();
+    }
+  } catch (error) {
+    console.error('Error fetching person:', error.message);
+    response.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/persons', async (request, response) => {
+  const body = request.body;
+
+  if (!body.name || !body.number) {
+    return response.status(400).json({ error: 'Name or number missing' });
   }
 
-  app.post('/api/persons', (request, response) => {
-    const body = request.body
-  
-    if (body.content === undefined) {
-      return response.status(400).json({ error: 'content missing' })
+  try {
+    const existingPerson = await Person.findOne({ name: body.name });
+    if (existingPerson) {
+      return response.status(400).json({ error: 'Name must be unique' });
     }
-  
-    const person = new Note({
+
+    const person = new Person({
       name: body.name,
       number: body.number,
-    })
-  
-    person.save().then(savedPerson => {
-      response.json(savedPerson)
-    })
-  })
+    });
 
-    const existingPerson = persons.find(person => person.name === body.name);
-    if (existingPerson) {
-        return response.status(400).json({
-            error: "name must be unique"
-        })
-    }
+    const savedPerson = await person.save();
+    response.json(savedPerson);
+  } catch (error) {
+    console.error('Error saving person:', error.message);
+    response.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
-app.delete("/api/persons/:id", (request, response) => {
-    const id = Person(request.params.id)
-    persons = persons.filter(person => person.id !== id)
+app.delete('/api/persons/:id', async (request, response) => {
+  try {
+    await Person.findByIdAndRemove(request.params.id);
+    response.status(204).end();
+  } catch (error) {
+    console.error('Error deleting person:', error.message);
+    response.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
-    response.status(204).end()
-})
-
-const PORT = process.env.PORT
-app.listen(PORT)
-console.log(`Server running on port ${PORT}`)
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
