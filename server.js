@@ -1,5 +1,7 @@
 const express = require('express')
 const app = express()
+var morgan = require('morgan')
+
 
 let numbers = [
     {
@@ -25,6 +27,7 @@ let numbers = [
 ]
 
 app.use(express.json())
+app.use(morgan("tiny"))
 
 app.get("/", (request, response) => {
     response.send("<h1>Puhelinluettelo</h1>")
