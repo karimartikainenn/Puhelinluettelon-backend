@@ -43,16 +43,11 @@ app.get("/api/persons", (request, response) => {
     })
 })
 
-app.get("/api/persons/:id", (request, response) => {
-    const id = Person(request.params.id)
-    const person = persons.find(person => person.id === id)
-    if (person) {
-        response.json(person)
-    } else {
-        console.log(`No user found with the provided ID: ${id}`)
-        response.status(404).end()
-    }
-})
+app.get('/api/persons/:id', (request, response) => {
+    Person.findById(request.params.id).then(person => {
+      response.json(person)
+    })
+  })
 
 const generateId = () => {
     const maxId = persons.length > 0
@@ -61,14 +56,22 @@ const generateId = () => {
     return maxId + 1
   }
 
-app.post("/api/persons", (request, response) => {
+  app.post('/api/persons', (request, response) => {
     const body = request.body
-
-    if (!body.name || !body.number) {
-        return response.status(400).json({
-            error: "name or number is missing"
-        })
+  
+    if (body.content === undefined) {
+      return response.status(400).json({ error: 'content missing' })
     }
+  
+    const person = new Note({
+      name: body.name,
+      number: body.number,
+    })
+  
+    person.save().then(savedPerson => {
+      response.json(savedPerson)
+    })
+  })
 
     const existingPerson = persons.find(person => person.name === body.name);
     if (existingPerson) {
