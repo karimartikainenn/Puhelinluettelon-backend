@@ -19,6 +19,18 @@ morgan.token('postData', (request) => {
   return '';
 });
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
+
+  next(error)
+}
+
 app.get('/', (request, response) => {
   response.send('<h1>Puhelinluettelo</h1>');
 });
@@ -110,10 +122,7 @@ app.delete('/api/persons/:id', async (request, response) => {
     }
   });
 
-  app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Internal Server Error' });
-  });
+  app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
